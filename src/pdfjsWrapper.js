@@ -12,9 +12,8 @@ export default function(PDFJS) {
 		var source;
 		if ( typeof(src) === 'string' )
 			source = { url: src };
-		else if ( src instanceof Uint8Array )
-			source = { data: src };
-		else if ( typeof(src) === 'object' && src !== null )
+		else
+		if ( typeof(src) === 'object' && src !== null )
 			source = Object.assign({}, src);
 		else
 			throw new TypeError('invalid src type');
@@ -77,14 +76,10 @@ export default function(PDFJS) {
 			var CSS_UNITS = 96.0 / 72.0;
 
 			var iframeElt = document.createElement('iframe');
-			var tempElt = document.createElement('div');
-			tempElt.style.cssText = 'display: none';
-            window.document.body.appendChild(tempElt);
 
 			function removeIframe() {
 
 				iframeElt.parentNode.removeChild(iframeElt);
-				tempElt.parentNode.removeChild(tempElt);
 			}
 
 			new Promise(function(resolve, reject) {
@@ -112,8 +107,9 @@ export default function(PDFJS) {
 					var viewport = page.getViewport(1);
 					win.document.head.appendChild(win.document.createElement('style')).textContent =
 						'@supports ((size:A4) and (size:1pt 1pt)) {' +
-							'@page { size: ' + ((viewport.width * PRINT_UNITS) / CSS_UNITS) + 'pt ' + ((viewport.height * PRINT_UNITS) / CSS_UNITS) + 'pt; }' +
-							'}'+
+							'@page { margin: 1pt; size: ' + ((viewport.width * PRINT_UNITS) / CSS_UNITS) + 'pt ' + ((viewport.height * PRINT_UNITS) / CSS_UNITS) + 'pt; }' +
+						'}' +
+
 						'@media print {' +
 							'body { margin: 0 }' +
 							'canvas { page-break-before: avoid; page-break-after: always; page-break-inside: avoid }' +
@@ -142,7 +138,7 @@ export default function(PDFJS) {
 
 							var viewport = page.getViewport(1);
 
-							var printCanvasElt = tempElt.appendChild(document.createElement('canvas'));
+							var printCanvasElt = win.document.body.appendChild(win.document.createElement('canvas'));
 							printCanvasElt.width = (viewport.width * PRINT_UNITS);
 							printCanvasElt.height = (viewport.height * PRINT_UNITS);
 
@@ -161,22 +157,9 @@ export default function(PDFJS) {
 
 				Promise.all(allPages)
 				.then(function() {
-                    for (var i = 0; i < tempElt.children.length; ++i) {
-                        var child = tempElt.children[i];
-                        var canvas = child.cloneNode(true);
-
-                        var ctx = canvas.getContext('2d');
-                        ctx.drawImage(child, 0, 0);
-
-                        win.document.body.appendChild(canvas);
-                    }
 
 					win.focus(); // Required for IE
-					if (win.document.queryCommandSupported('print')) {
-						win.document.execCommand('print', false, null);
-						} else {
-						win.print();
-					  }
+					win.print();
 					removeIframe();
 				})
 				.catch(function(err) {
@@ -229,7 +212,7 @@ export default function(PDFJS) {
 			linkService.setDocument(pdfDoc);
 			linkService.setViewer(viewer);
 
-			pdfPage.getAnnotations({ intent: 'display' })
+			pdfPage.getAnnotations()
 			.then(function(annotations) {
 
 				PDFJS.AnnotationLayer.render({

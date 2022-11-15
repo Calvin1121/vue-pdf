@@ -36,7 +36,7 @@ export default function(pdfjsWrapper) {
 		},
 		props: {
 			src: {
-				type: [String, Object, Uint8Array],
+				type: [String, Object],
 				default: '',
 			},
 			page: {

@@ -4,15 +4,12 @@
 	import componentFactory from './componentFactory'
 	import pdfjsWrapper from './pdfjsWrapper'
 
-	var PDFJS = require('pdfjs-dist/build/pdf.js');
+	if ( process.env.VUE_ENV === 'server' ) {
 
-	if ( process.env.VUE_ENV !== 'server' ) {
+		var PDFJS = require('pdfjs-dist/build/pdf.js');
+	} else {
 
-		if ( typeof window !== 'undefined' && 'Worker' in window ) {
-
-			var PdfjsWorker = require('worker-loader!pdfjs-dist/build/pdf.worker.js');
-			PDFJS.GlobalWorkerOptions.workerPort = new PdfjsWorker();
-		}
+		var PDFJS = require('pdfjs-dist/webpack.js');
 	}
 
 	var component = componentFactory(pdfjsWrapper(PDFJS));
